@@ -42,3 +42,13 @@ services:
       - ./data/postgres:/var/lib/postgresql/data
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
+
+  # One-off container used to run migrations inside the compose network
+  migrator:
+    image: python:3.13-slim
+    working_dir: /work
+    volumes:
+      - ./backend:/work
+    entrypoint: ["sleep", "infinity"]
+    depends_on:
+      - postgres
