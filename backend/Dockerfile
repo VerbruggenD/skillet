@@ -1,12 +1,3 @@
-### Frontend build stage (Next.js)
-FROM node:24-alpine AS frontend-builder
-WORKDIR /workspace
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci --silent
-COPY frontend/ ./
-RUN npm run build
-
-### Final image (Python app + built frontend)
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -29,10 +20,6 @@ RUN python -m pip install --upgrade pip setuptools wheel \
 # Copy application code
 COPY app ./app
 COPY migrations ./migrations
-
-# Copy built frontend from the builder stage
-COPY --from=frontend-builder /workspace/.next ./frontend/.next
-COPY --from=frontend-builder /workspace/public ./frontend/public
 
 EXPOSE 8000
 
