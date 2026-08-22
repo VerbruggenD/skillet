@@ -34,9 +34,7 @@ class AccessToken(Base):
     __tablename__ = "access_tokens"
 
     token: Mapped[str] = mapped_column(String(43), primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -127,9 +125,7 @@ class RecipeTag(Base):
     recipe_id: Mapped[int] = mapped_column(
         ForeignKey("recipes.id", ondelete="CASCADE"), primary_key=True
     )
-    tag_id: Mapped[int] = mapped_column(
-        ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True
-    )
+    tag_id: Mapped[int] = mapped_column(ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True)
 
 
 class Image(Base):
