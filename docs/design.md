@@ -249,18 +249,18 @@ architecture, schema, and API surface up front — so that later feature work
 rather than reshaping existing ones.
 
 ### 0. Repo & CI/CD scaffolding
-- [ ] `main` and `develop` branches created, both protected (no direct pushes, require PR + passing checks)
-- [ ] `ci.yml` workflow: runs lint + type-check + tests on every PR
+- [x] `main` and `develop` branches created, both protected (no direct pushes, require PR + passing checks)
+- [x] `ci.yml` workflow: runs lint + type-check + tests on every PR
 - [ ] `release.yml` workflow: builds and pushes image to `ghcr.io` on `v*` tag
 - [ ] Copilot enabled as an automatic PR reviewer
-- [ ] `CONTRIBUTING.md` or README section documenting the branch flow (feature → develop → release → main)
+- [x] `CONTRIBUTING.md` or README section documenting the branch flow (feature → develop → release → main)
 
 ### 1. Container & environment skeleton
-- [ ] `docker-compose.yml` with `app` and `postgres` services, using env vars (not hardcoded secrets) for DB credentials and JWT secret
-- [ ] `./data/postgres` and `./data/uploads` bind mounts wired up and confirmed to persist across `docker-compose down && up`
-- [ ] `app` Dockerfile is multi-stage (React build → copy into final backend image), builds successfully in CI
-- [ ] `.env.example` documents every required environment variable
-- [ ] App container exposes exactly one HTTP port; confirmed reachable via a manually configured local reverse proxy (Caddy/nginx) as a smoke test
+- [x] `docker-compose.yml` with `app` and `postgres` services, using env vars (not hardcoded secrets) for DB credentials and JWT secret
+- [x] `./data/postgres` and `./data/uploads` bind mounts wired up and confirmed to persist across `docker-compose down && up`
+- [x] `app` Dockerfile is multi-stage (React build → copy into final backend image), builds successfully in CI
+- [x] `.env.example` documents every required environment variable
+- [x] App container exposes exactly one HTTP port; confirmed reachable via a manually configured local reverse proxy (Caddy/nginx) as a smoke test
 
 ### 2. Database schema (full schema up front)
 - [ ] Migration tool chosen and wired up (e.g. Alembic)
