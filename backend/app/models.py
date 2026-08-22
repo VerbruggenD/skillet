@@ -1,14 +1,11 @@
-from __future__ import annotations
-
 from sqlalchemy import (
     Column,
+    DateTime,
+    Float,
+    ForeignKey,
     Integer,
     String,
     Text,
-    Float,
-    DateTime,
-    ForeignKey,
-    Table,
     func,
 )
 from sqlalchemy.dialects.postgresql import TSVECTOR
