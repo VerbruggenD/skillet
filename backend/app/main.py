@@ -4,15 +4,15 @@ from fastapi.responses import JSONResponse
 from .routers import auth, images, recipes, tags
 
 app = FastAPI(
-    title='Skillet API',
-    openapi_url='/api/openapi.json',
-    docs_url='/api/docs',
+    title="Skillet API",
+    openapi_url="/api/openapi.json",
+    docs_url="/api/docs",
 )
 
 
-@app.get('/healthz')
+@app.get("/healthz")
 async def healthz():
-    return JSONResponse({'status': 'ok'})
+    return JSONResponse({"status": "ok"})
 
 
 # include routers
