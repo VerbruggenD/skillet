@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 router = APIRouter(prefix="/api/tags", tags=["tags"])
 
 
-@router.get('/')
+@router.get("/")
 async def list_tags():
-    return JSONResponse(status_code=501, content={"detail": "Not implemented: list tags"})
+    return JSONResponse(
+        status_code=501, content={"detail": "Not implemented: list tags"}
+    )
