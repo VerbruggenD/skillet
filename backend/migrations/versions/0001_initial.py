@@ -20,9 +20,7 @@ def upgrade() -> None:
         sa.Column("email", sa.String(length=320), nullable=False, unique=True),
         sa.Column("password_hash", sa.String(length=255), nullable=False),
         sa.Column("role", sa.String(length=32), nullable=False, server_default="user"),
-        sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
-        ),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
     )
 
     # sessions (optional token store)
@@ -55,9 +53,7 @@ def upgrade() -> None:
         sa.Column("cook_time", sa.Integer(), nullable=True),
         sa.Column("servings", sa.Integer(), nullable=True),
         sa.Column("source_url", sa.String(length=2048), nullable=True),
-        sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
-        ),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
         sa.Column("search_vector", pg.TSVECTOR(), nullable=True),
     )
 
@@ -126,15 +122,11 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("filename", sa.String(length=1024), nullable=False),
-        sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
-        ),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
     )
 
     # full-text search index (GIN) on recipes.search_vector
-    op.create_index(
-        "ix_recipes_search", "recipes", ["search_vector"], postgresql_using="gin"
-    )
+    op.create_index("ix_recipes_search", "recipes", ["search_vector"], postgresql_using="gin")
 
 
 def downgrade() -> None:
