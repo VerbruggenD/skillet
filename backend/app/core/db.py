@@ -1,24 +1,16 @@
-import os
+"""Database session factory and async SQLAlchemy configuration."""
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from collections.abc import AsyncIterator
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    (
-        f"postgresql://{os.environ.get('POSTGRES_USER', 'skillet')}:{os.environ.get('POSTGRES_PASSWORD', 'change-me')}"
-        f"@{os.environ.get('POSTGRES_HOST', 'postgres')}:{os.environ.get('POSTGRES_PORT', '5432')}"
-        f"/{os.environ.get('POSTGRES_DB', 'skillet')}"
-    ),
-)
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-engine = create_engine(DATABASE_URL, future=True)
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+from .config import settings
+
+engine = create_async_engine(settings.database_url, future=True)
+AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db() -> AsyncIterator[AsyncSession]:
+    """Yield a database session for request-scoped dependency injection."""
+    async with AsyncSessionLocal() as session:
+        yield session

@@ -1,3 +1,5 @@
+"""Alembic environment configuration for migrating the backend schema."""
+
 import os
 import sys
 from logging.config import fileConfig
@@ -29,7 +31,8 @@ if db_url:
     config.set_main_option("sqlalchemy.url", db_url)
 
 
-def run_migrations_offline():
+def run_migrations_offline() -> None:
+    """Run migrations in offline mode against a database URL string."""
     url = config.get_main_option("sqlalchemy.url")
     context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
 
@@ -37,7 +40,8 @@ def run_migrations_offline():
         context.run_migrations()
 
 
-def run_migrations_online():
+def run_migrations_online() -> None:
+    """Run migrations in online mode against the connected database engine."""
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",

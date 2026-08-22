@@ -1,3 +1,5 @@
+"""Application entry point exposing the public FastAPI API routers."""
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
@@ -11,7 +13,8 @@ app = FastAPI(
 
 
 @app.get("/healthz")
-async def healthz():
+async def healthz() -> JSONResponse:
+    """Return the API health status used by deployment and monitoring checks."""
     return JSONResponse({"status": "ok"})
 
 

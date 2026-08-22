@@ -1,9 +1,4 @@
-"""initial schema
-
-Revision ID: 0001_initial
-Revises:
-Create Date: 2026-08-21 00:00:00.000000
-"""
+"""Initial schema revision for the Skillet application database."""
 
 import sqlalchemy as sa
 from alembic import op
@@ -16,7 +11,8 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
+    """Apply the initial application schema for users, recipes, and related entities."""
     # users
     op.create_table(
         "users",
@@ -141,7 +137,8 @@ def upgrade():
     )
 
 
-def downgrade():
+def downgrade() -> None:
+    """Drop the initial schema objects and return the database to an empty state."""
     op.drop_index("ix_recipes_search", table_name="recipes")
     op.drop_table("images")
     op.drop_table("recipe_tags")
