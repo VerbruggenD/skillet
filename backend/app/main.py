@@ -3,7 +3,8 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from .routers import auth, images, recipes, tags
+from .core.users import auth_backend, fastapi_users
+from .routers import auth, images, recipes, settings, tags, users
 
 app = FastAPI(
     title="Skillet API",
@@ -20,6 +21,13 @@ async def healthz() -> JSONResponse:
 
 # include routers
 app.include_router(auth.router)
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/api/auth/cookie",
+    tags=["auth"],
+)
+app.include_router(users.router)
 app.include_router(recipes.router)
 app.include_router(tags.router)
 app.include_router(images.router)
+app.include_router(settings.router)
