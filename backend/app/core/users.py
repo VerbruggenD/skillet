@@ -1,15 +1,19 @@
 """FastAPI Users integration and auth dependency wiring for the API."""
 
 from collections.abc import AsyncIterator
-from typing import Annotated, Any, cast
+from typing import Annotated
 
 from fastapi import Depends
 from fastapi_users import BaseUserManager, FastAPIUsers, IntegerIDMixin
 from fastapi_users.authentication import AuthenticationBackend, CookieTransport
-from fastapi_users.db import SQLAlchemyUserDatabase
+from fastapi_users.authentication.strategy.db import DatabaseStrategy
+from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models import User
+from ..models import AccessToken, User
+from .config import settings
 from .db import get_db
 
 
@@ -18,6 +22,13 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     reset_password_token_secret = "change-me"
     verification_token_secret = "change-me"
+
+    async def on_after_register(self, user: User, request: object | None = None) -> None:
+        """Promote the first registered account to instance administrator."""
+        session = self.user_db.session
+        user_count = await session.scalar(select(func.count()).select_from(User))
+        if user_count == 1:
+            await self.user_db.update(user, {"is_superuser": True})
 
 
 async def get_user_db(
@@ -34,13 +45,33 @@ async def get_user_manager(
     yield UserManager(user_db)
 
 
-cookie_transport = CookieTransport(cookie_name="skillet-session", cookie_max_age=3600)
+async def get_access_token_db(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> AsyncIterator[SQLAlchemyAccessTokenDatabase[AccessToken]]:
+    """Build an access-token adapter scoped to the active request session."""
+    yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
+
+
+async def get_database_strategy(
+    access_token_db: Annotated[
+        SQLAlchemyAccessTokenDatabase[AccessToken], Depends(get_access_token_db)
+    ],
+) -> DatabaseStrategy[User, int, AccessToken]:
+    """Use opaque, server-side access tokens with the configured cookie lifetime."""
+    return DatabaseStrategy(access_token_db, lifetime_seconds=3600)
+
+
+cookie_transport = CookieTransport(
+    cookie_name=settings.cookie_name,
+    cookie_max_age=3600,
+    cookie_secure=settings.cookie_secure,
+)
 
 
 auth_backend = AuthenticationBackend(
-    name="jwt",
+    name="cookie",
     transport=cookie_transport,
-    get_strategy=lambda: cast(Any, None),
+    get_strategy=get_database_strategy,
 )
 
 fastapi_users = FastAPIUsers[User, int](get_user_manager, [auth_backend])
