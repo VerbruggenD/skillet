@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
+from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyBaseAccessTokenTable
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -28,18 +29,12 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     access_tokens: Mapped[list["AccessToken"]] = relationship(back_populates="user")
 
 
-class AccessToken(Base):
+class AccessToken(SQLAlchemyBaseAccessTokenTable[int], Base):
     """API access token issued to an authenticated user."""
 
     __tablename__ = "access_tokens"
 
-    token: Mapped[str] = mapped_column(String(43), primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
     expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,

@@ -1,7 +1,7 @@
 """FastAPI Users integration and auth dependency wiring for the API."""
 
 from collections.abc import AsyncIterator
-from typing import Annotated
+from typing import Annotated, Any, cast
 
 from fastapi import Depends
 from fastapi_users import BaseUserManager, FastAPIUsers, IntegerIDMixin
@@ -25,7 +25,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     async def on_after_register(self, user: User, request: object | None = None) -> None:
         """Promote the first registered account to instance administrator."""
-        session = self.user_db.session
+        user_db = cast(SQLAlchemyUserDatabase[User, int], self.user_db)
+        session = user_db.session
         user_count = await session.scalar(select(func.count()).select_from(User))
         if user_count == 1:
             await self.user_db.update(user, {"is_superuser": True})
@@ -47,16 +48,15 @@ async def get_user_manager(
 
 async def get_access_token_db(
     session: Annotated[AsyncSession, Depends(get_db)],
-) -> AsyncIterator[SQLAlchemyAccessTokenDatabase[AccessToken]]:
+) -> AsyncIterator[SQLAlchemyAccessTokenDatabase[Any]]:
     """Build an access-token adapter scoped to the active request session."""
-    yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
+    token_db = SQLAlchemyAccessTokenDatabase(session, AccessToken)
+    yield cast(SQLAlchemyAccessTokenDatabase[Any], token_db)
 
 
 async def get_database_strategy(
-    access_token_db: Annotated[
-        SQLAlchemyAccessTokenDatabase[AccessToken], Depends(get_access_token_db)
-    ],
-) -> DatabaseStrategy[User, int, AccessToken]:
+    access_token_db: Annotated[SQLAlchemyAccessTokenDatabase[Any], Depends(get_access_token_db)],
+) -> DatabaseStrategy[User, int, Any]:
     """Use opaque, server-side access tokens with the configured cookie lifetime."""
     return DatabaseStrategy(access_token_db, lifetime_seconds=3600)
 
