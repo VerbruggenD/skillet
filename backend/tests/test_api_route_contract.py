@@ -122,6 +122,22 @@ def test_auth_and_user_routes_match_the_api_contract() -> None:
     assert {"get", "patch", "delete"} <= set(openapi["/api/users/{user_id}"])
 
 
+def test_registration_preflight_allows_the_frontend_dev_server() -> None:
+    """The browser may preflight the JSON registration request from localhost."""
+    response = client.options(
+        "/api/auth/register",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+    assert response.headers["access-control-allow-credentials"] == "true"
+
+
 def test_recipe_image_upload_requires_authentication() -> None:
     """The recipe image route should reject an unauthenticated upload request."""
     response = client.post("/api/recipes/1/image")

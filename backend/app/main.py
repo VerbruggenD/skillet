@@ -3,11 +3,13 @@
 from typing import cast
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.types import ExceptionHandler
 
+from .core.config import settings as app_settings
 from .core.rate_limit import limit_login_router, limiter
 from .core.users import auth_backend, fastapi_users
 from .routers import auth, export, favorites, images, recipes, settings, suggestions, tags, users
@@ -16,6 +18,15 @@ app = FastAPI(
     title="Skillet API",
     openapi_url="/api/openapi.json",
     docs_url="/api/docs",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        origin.strip() for origin in app_settings.cors_origins.split(",") if origin.strip()
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, cast(ExceptionHandler, _rate_limit_exceeded_handler))
