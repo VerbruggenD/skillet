@@ -12,6 +12,14 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Public, browser-reachable API origin. Next.js inlines NEXT_PUBLIC_* values
+# into the client bundle at build time, so it must be supplied here (e.g.
+# docker build --build-arg NEXT_PUBLIC_API_URL=https://skillet.example.com).
+# For the recommended single-origin topology this equals the public site origin;
+# the reverse proxy routes /api to the API container.
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Build the application
 RUN npm run build
 

@@ -14,8 +14,9 @@ fi
 : "${POSTGRES_DB:=skillet}"
 : "${POSTGRES_PORT:=5432}"
 
-: "${DATABASE_URL:=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}}"
+# Inside the compose network Postgres always listens on 5432; POSTGRES_PORT is only the host-side bind.
+: "${DATABASE_URL:=postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}}"
 
 echo "Using DATABASE_URL=${DATABASE_URL}"
 
-docker compose run --rm migrator sh -c "python -m pip install --upgrade pip setuptools wheel && python -m pip install alembic sqlalchemy psycopg[binary] && alembic -c migrations/alembic.ini upgrade head"
+docker compose run --rm --entrypoint sh -e DATABASE_URL="${DATABASE_URL}" migrator -c "python -m pip install --upgrade pip setuptools wheel && python -m pip install alembic sqlalchemy psycopg[binary] && alembic -c migrations/alembic.ini upgrade head"
