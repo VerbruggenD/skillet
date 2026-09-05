@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth-provider";
 
 type AuthMode = "login" | "register";
 
@@ -10,6 +11,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
+  const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keepPrivate, setKeepPrivate] = useState(false);
@@ -46,6 +48,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       }
 
       if (isLogin) {
+        await refresh();
         router.push("/");
         router.refresh();
       } else {
@@ -57,6 +60,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         });
 
         if (loginResponse.ok) {
+          await refresh();
           router.push("/");
           router.refresh();
         } else {
