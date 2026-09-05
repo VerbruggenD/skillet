@@ -7,15 +7,46 @@ import { RecipeCard } from "@/components/recipe-card";
 import { SAMPLE_RECIPES } from "@/lib/sample-recipes";
 import {
   fetchRecipes,
+  fetchTags,
   type Recipe,
   type RecipeListSort,
+  type Tag,
 } from "@/lib/api";
+
+function GridIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+      <rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor" />
+      <rect x="9" y="1" width="6" height="6" rx="1" fill="currentColor" />
+      <rect x="1" y="9" width="6" height="6" rx="1" fill="currentColor" />
+      <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ListIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+      <rect x="1" y="2" width="4" height="3" rx="0.6" fill="currentColor" />
+      <rect x="7" y="2.8" width="8" height="1.4" rx="0.7" fill="currentColor" />
+      <rect x="1" y="7" width="4" height="3" rx="0.6" fill="currentColor" />
+      <rect x="7" y="7.8" width="8" height="1.4" rx="0.7" fill="currentColor" />
+      <rect x="1" y="12" width="4" height="3" rx="0.6" fill="currentColor" />
+      <rect x="7" y="12.8" width="8" height="1.4" rx="0.7" fill="currentColor" />
+    </svg>
+  );
+}
 
 export default function Home() {
   const { user } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [total, setTotal] = useState(0);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [sort, setSort] = useState<RecipeListSort>("date");
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [searchInput, setSearchInput] = useState("");
+  const [query, setQuery] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +56,31 @@ export default function Home() {
 
     (async () => {
       try {
-        const data = await fetchRecipes({ sort, limit: 24 });
+        const data = await fetchTags();
+        if (!cancelled) {
+          setAllTags(data);
+        }
+      } catch {
+        // tags are a browse nicety; ignore failures silently
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const data = await fetchRecipes({
+          sort,
+          limit: 24,
+          q: query || undefined,
+          tag: selectedTags.length ? selectedTags : undefined,
+        });
         if (!cancelled) {
           setRecipes(data.items);
           setTotal(data.total);
@@ -44,10 +99,40 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [sort, reloadKey]);
+  }, [sort, query, reloadKey, selectedTags]);
 
   function handleSortChange(nextSort: RecipeListSort) {
     setSort(nextSort);
+    setError(null);
+    setIsLoading(true);
+  }
+
+  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setQuery(searchInput.trim().toLowerCase());
+    setError(null);
+    setIsLoading(true);
+  }
+
+  function handleClearSearch() {
+    setSearchInput("");
+    setQuery("");
+    setError(null);
+    setIsLoading(true);
+  }
+
+  function handleTagToggle(tagName: string) {
+    setSelectedTags((current) =>
+      current.includes(tagName) ? current.filter((name) => name !== tagName) : [...current, tagName],
+    );
+    setError(null);
+    setIsLoading(true);
+  }
+
+  function handleClearFilters() {
+    setSearchInput("");
+    setQuery("");
+    setSelectedTags([]);
     setError(null);
     setIsLoading(true);
   }
@@ -59,6 +144,8 @@ export default function Home() {
   }
 
   const isFresh = total > 0;
+  const hasActiveFilters = query.trim().length > 0 || selectedTags.length > 0;
+  const gridClass = view === "list" ? " recipe-grid--list" : "";
 
   return (
     <div className="browse-page">
@@ -121,6 +208,84 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="browse-filters">
+          <form className="browse-search" role="search" onSubmit={handleSearch}>
+            <span className="browse-search__icon" aria-hidden="true">
+              ⌕
+            </span>
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Search recipes by name or ingredient..."
+              aria-label="Search recipes"
+            />
+            {searchInput ? (
+              <button
+                className="browse-search__clear"
+                type="button"
+                onClick={handleClearSearch}
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            ) : null}
+          </form>
+
+          <div className="view-toggle" role="group" aria-label="Choose layout">
+            <button
+              type="button"
+              className={`view-toggle__button${view === "grid" ? " view-toggle__button--active" : ""}`}
+              aria-pressed={view === "grid"}
+              onClick={() => setView("grid")}
+              title="Grid view"
+            >
+              <GridIcon />
+            </button>
+            <button
+              type="button"
+              className={`view-toggle__button${view === "list" ? " view-toggle__button--active" : ""}`}
+              aria-pressed={view === "list"}
+              onClick={() => setView("list")}
+              title="List view"
+            >
+              <ListIcon />
+            </button>
+          </div>
+        </div>
+
+        {allTags.length ? (
+          <div className="browse-tags">
+            <span className="sort-label">Filter by tag</span>
+            <ul className="browse-tags__chips">
+              {allTags.map((tag) => {
+                const active = selectedTags.includes(tag.name);
+                return (
+                  <li key={tag.id}>
+                    <button
+                      type="button"
+                      className={`tag-filter-chip${active ? " tag-filter-chip--active" : ""}`}
+                      aria-pressed={active}
+                      onClick={() => handleTagToggle(tag.name)}
+                    >
+                      {tag.name}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {hasActiveFilters ? (
+              <button
+                className="tag-filter-clear"
+                type="button"
+                onClick={handleClearFilters}
+              >
+                Clear filters
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
         {isLoading ? (
           <div className="recipe-grid" aria-label="Loading recipes">
             {Array.from({ length: 6 }).map((_, index) => (
@@ -142,14 +307,27 @@ export default function Home() {
             </button>
           </div>
         ) : recipes.length ? (
-          <div className="recipe-grid">
+          <div className={`recipe-grid${gridClass}`}>
             {recipes.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} />
             ))}
           </div>
+        ) : hasActiveFilters ? (
+          <div className="empty-state">
+            <div className="empty-state__illustration" aria-hidden="true">
+              <span>⌕</span>
+            </div>
+            <div>
+              <h3>Nothing under those filters</h3>
+              <p>Try a different search term, or clear the tags to see the whole shelf.</p>
+              <button className="text-link text-link--accent" type="button" onClick={handleClearFilters}>
+                Clear filters <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
         ) : (
           <>
-            <div className="recipe-grid">
+            <div className={`recipe-grid${gridClass}`}>
               {SAMPLE_RECIPES.map((recipe) => (
                 <RecipeCard key={recipe.id} recipe={recipe} sample />
               ))}

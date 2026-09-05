@@ -112,7 +112,7 @@ def override_db(session: FakeSearchSession, user: Any = None) -> None:
 
 
 def test_recipe_creation_normalizes_and_reuses_tags() -> None:
-    """Recipe writes normalize tag names and create each distinct tag once."""
+    """Recipe writes normalize tag names to lowercase and create each distinct tag once."""
     session = FakeSearchSession(scalar_values=[None])
     user = SimpleNamespace(id=1, default_recipe_locked=False, is_superuser=False)
     override_db(session, user)
