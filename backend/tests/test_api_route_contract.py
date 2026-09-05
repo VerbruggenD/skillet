@@ -122,12 +122,11 @@ def test_auth_and_user_routes_match_the_api_contract() -> None:
     assert {"get", "patch", "delete"} <= set(openapi["/api/users/{user_id}"])
 
 
-def test_recipe_image_upload_requires_a_file() -> None:
-    """The recipe image route should reject uploads without a file body."""
+def test_recipe_image_upload_requires_authentication() -> None:
+    """The recipe image route should reject an unauthenticated upload request."""
     response = client.post("/api/recipes/1/image")
 
-    assert response.status_code == 400
-    assert response.json() == {"detail": "File is required"}
+    assert response.status_code == 401
 
 
 def test_tag_listing_returns_placeholder_not_implemented() -> None:

@@ -18,7 +18,9 @@ class User(SQLAlchemyBaseUserTable[int], Base):
 
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(  # pyright: ignore[reportIncompatibleVariableOverride]
+        Integer, primary_key=True
+    )
     default_recipe_locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -34,7 +36,9 @@ class AccessToken(SQLAlchemyBaseAccessTokenTable[int], Base):
 
     __tablename__ = "access_tokens"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(  # pyright: ignore[reportIncompatibleVariableOverride]
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
@@ -68,9 +72,15 @@ class Recipe(Base):
     search_vector: Mapped[object | None] = mapped_column(TSVECTOR, nullable=True)
 
     owner: Mapped[User | None] = relationship()
-    ingredients: Mapped[list["Ingredient"]] = relationship(back_populates="recipe")
-    steps: Mapped[list["Step"]] = relationship(back_populates="recipe")
-    images: Mapped[list["Image"]] = relationship(back_populates="recipe")
+    ingredients: Mapped[list["Ingredient"]] = relationship(
+        back_populates="recipe", cascade="all, delete-orphan"
+    )
+    steps: Mapped[list["Step"]] = relationship(
+        back_populates="recipe", cascade="all, delete-orphan"
+    )
+    images: Mapped[list["Image"]] = relationship(
+        back_populates="recipe", cascade="all, delete-orphan"
+    )
 
 
 class Ingredient(Base):
