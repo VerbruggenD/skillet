@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     secret_key: str = "change-me"
     cookie_name: str = "skillet-session"
     cookie_secure: bool = False
+    login_rate_limit: str = "5/minute"
     upload_dir: str = "./uploads"
     max_upload_size: int = 5 * 1024 * 1024
 

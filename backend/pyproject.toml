@@ -11,6 +11,7 @@ dependencies = [
     "pydantic-settings",
     "fastapi-users[sqlalchemy]",
     "asyncpg",
+    "slowapi>=0.1.10",
 ]
 
 [dependency-groups]

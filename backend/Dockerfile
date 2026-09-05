@@ -22,7 +22,8 @@ RUN python -m pip install --upgrade pip setuptools wheel \
 		alembic \
 		pydantic-settings \
 		fastapi-users[sqlalchemy] \
-		asyncpg
+		asyncpg \
+		slowapi
 
 # Copy application code
 COPY app ./app
