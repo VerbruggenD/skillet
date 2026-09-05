@@ -357,10 +357,184 @@ h2 {
   box-shadow: 0 0 0 3px rgba(75, 47, 28, 0.12);
 }
 
+.browse-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.browse-search {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 34rem;
+  min-height: 2.7rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.browse-search:focus-within {
+  border-color: var(--char);
+  box-shadow: 0 0 0 3px rgba(75, 47, 28, 0.12);
+}
+
+.browse-search__icon {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.browse-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: Arial, sans-serif;
+  font-size: 0.82rem;
+}
+
+.browse-search input::placeholder {
+  color: var(--muted);
+}
+
+.browse-search__clear {
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--amber-soft);
+  color: var(--char);
+  cursor: pointer;
+  font-size: 0.68rem;
+}
+
+.view-toggle {
+  display: inline-flex;
+  padding: 0.2rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.view-toggle__button {
+  display: grid;
+  width: 2.2rem;
+  height: 2rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.view-toggle__button--active {
+  background: var(--char);
+  color: var(--surface);
+}
+
+.browse-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 1.6rem;
+  padding-bottom: 1.3rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.browse-tags__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.9rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.tag-filter-chip:hover {
+  border-color: var(--char);
+  color: var(--char);
+}
+
+.tag-filter-chip--active {
+  border-color: var(--char);
+  background: var(--char);
+  color: var(--surface);
+}
+
+.tag-filter-clear {
+  margin-left: auto;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--flame);
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.tag-filter-clear:hover {
+  color: var(--char);
+}
+
 .recipe-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
   gap: 1.5rem;
+}
+
+.recipe-grid--list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.recipe-grid--list .recipe-card__link,
+.recipe-grid--list .recipe-card--sample {
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.recipe-grid--list .recipe-card__media {
+  aspect-ratio: auto;
+  min-height: 7.5rem;
+  border-bottom: 0;
+  border-right: 1px solid var(--line);
+}
+
+.recipe-grid--list .recipe-card__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .recipe-card {
@@ -1398,6 +1572,36 @@ h2 {
 
   .recipe-grid {
     grid-template-columns: 1fr;
+  }
+
+  .recipe-grid--list .recipe-card__link,
+  .recipe-grid--list .recipe-card--sample {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .recipe-grid--list .recipe-card__media {
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+    border-bottom: 1px solid var(--line);
+    border-right: 0;
+  }
+
+  .recipe-grid--list .recipe-card__body {
+    display: block;
+  }
+
+  .browse-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .browse-search {
+    max-width: none;
+    width: 100%;
+  }
+
+  .view-toggle {
+    align-self: flex-start;
   }
 
   .browse-toolbar {

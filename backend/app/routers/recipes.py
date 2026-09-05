@@ -98,19 +98,37 @@ def _replace_steps(recipe: Recipe, steps: Sequence[StepInput]) -> None:
 
 
 async def _replace_tags(recipe: Recipe, names: Sequence[str], session: AsyncSession) -> None:
-    """Get or create normalized tags and replace the recipe's tag collection."""
-    normalized = list(dict.fromkeys(name.strip().lower() for name in names if name.strip()))
+    """Reconcile a recipe's tags to a single lowercase spelling and replace the collection."""
+    normalized = _canonical_tag_names(names)
     if not normalized:
         recipe.tags = []
         return
-    existing = list((await session.scalars(select(Tag).where(Tag.name.in_(normalized)))).all())
-    by_name = {tag.name: tag for tag in existing}
+    existing = list(
+        (
+            await session.scalars(
+                select(Tag).where(func.lower(Tag.name).in_([name.lower() for name in normalized]))
+            )
+        ).all()
+    )
+    by_lower = {tag.name.lower(): tag for tag in existing}
     for name in normalized:
-        if name not in by_name:
+        if name.lower() not in by_lower:
             tag = Tag(name=name)
             session.add(tag)
-            by_name[name] = tag
-    recipe.tags = [by_name[name] for name in normalized]
+            by_lower[name.lower()] = tag
+    recipe.tags = [by_lower[name.lower()] for name in normalized]
+
+
+def _canonical_tag_names(names: Sequence[str]) -> list[str]:
+    """Strip whitespace and dedupe names, returning them normalized to lowercase."""
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for name in names:
+        cleaned = name.strip().lower()
+        if cleaned and cleaned not in seen:
+            seen.add(cleaned)
+            ordered.append(cleaned)
+    return ordered
 
 
 @router.get("", response_model=RecipeList)
@@ -129,7 +147,9 @@ async def list_recipes(
         filters.append(Recipe.search_vector.op("@@")(func.websearch_to_tsquery("english", q)))
     if tag:
         filters.extend(
-            Recipe.tags.any(Tag.name == name.strip().lower()) for name in tag if name.strip()
+            Recipe.tags.any(func.lower(Tag.name) == name.strip().lower())
+            for name in tag
+            if name.strip()
         )
     sort_columns = {
         "name": Recipe.title.asc(),
