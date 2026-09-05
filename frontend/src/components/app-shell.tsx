@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
+import { SkilletMark } from "@/components/skillet-mark";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
@@ -13,7 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="site-header">
         <Link className="brand-mark" href="/" aria-label="Skillet home">
           <span className="brand-mark__icon" aria-hidden="true">
-            S
+            <SkilletMark />
           </span>
           <span>
             <span className="brand-mark__name">Skillet</span>
