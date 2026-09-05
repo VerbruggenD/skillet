@@ -23,6 +23,7 @@ RUN python -m pip install --upgrade pip setuptools wheel \
 		pydantic-settings \
 		fastapi-users[sqlalchemy] \
 		asyncpg \
+		psycopg[binary] \
 		slowapi
 
 # Copy application code
