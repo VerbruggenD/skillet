@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api:
     build:
@@ -17,21 +15,26 @@ services:
     depends_on:
       - postgres
 
-  # Run the frontend separately with `cd frontend && npm run dev` for live updates.
-  # Set NEXT_PUBLIC_API_URL=http://localhost:${APP_PORT:-8000} in the frontend dev environment.
-  # web:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: skillet-web
-  #   ports:
-  #     - "${WEB_PORT:-3000}:3000"
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - NEXT_PUBLIC_API_URL=http://api:8000
-  #   depends_on:
-  #     - api
+  # Frontend (Next.js). Opt-in via the `web` profile so the default
+  # `docker compose up -d` remains the api + postgres dev stack.
+  # For self-hosting: docker compose --profile web up -d --build
+  web:
+    profiles: ["web"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into the client bundle at build time. For the recommended
+        # single-origin topology this is the public site origin
+        # (e.g. https://skillet.example.com); its /api path is reverse-proxied
+        # to the API container.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL (the public site origin) in .env}
+    container_name: skillet-web
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    restart: unless-stopped
+    depends_on:
+      - api
 
   postgres:
     image: postgres:16
