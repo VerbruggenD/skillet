@@ -146,10 +146,10 @@ export default function RecipeDetailPage() {
         </button>
         {canEdit ? (
           <span className="recipe-detail__owner-actions">
-            <button className="text-link" type="button" disabled title="Recipe editor is on its way">
+            <Link className="owner-link" href={`/recipes/${recipe.id}/edit`}>
               Edit
-            </button>
-            <button className="text-link" type="button" disabled title="Recipe editor is on its way">
+            </Link>
+            <button className="owner-link" type="button" disabled title="Delete is on its way">
               Delete
             </button>
           </span>
