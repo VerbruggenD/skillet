@@ -182,6 +182,22 @@ def test_admin_can_update_recipe_lock() -> None:
         app.dependency_overrides.clear()
 
 
+def test_authenticated_user_can_record_a_cook() -> None:
+    """Cooking a recipe updates its last-cooked timestamp."""
+    recipe = make_recipe(owner_id=1)
+    session = FakeRecipeSession(recipe)
+    user = SimpleNamespace(id=2, default_recipe_locked=False, is_superuser=False)
+    set_overrides(session, user=user)
+    try:
+        response = client.post("/api/recipes/1/cook")
+        assert response.status_code == 200
+        assert recipe.last_cooked is not None
+        assert response.json()["last_cooked"] is not None
+        assert session.commits == 1
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_image_upload_rejects_unsupported_content_type() -> None:
     """Recipe image uploads accept only the configured image content types."""
     session = FakeRecipeSession(make_recipe())

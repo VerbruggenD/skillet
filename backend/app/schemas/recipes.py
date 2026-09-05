@@ -100,6 +100,7 @@ class RecipeRead(BaseModel):
     source_url: str | None
     is_locked: bool
     created_at: datetime
+    last_cooked: datetime | None
     ingredients: list[IngredientRead]
     steps: list[StepRead]
     images: list[ImageRead]

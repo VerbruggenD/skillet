@@ -146,6 +146,7 @@ def test_search_and_export_routes_match_the_api_contract() -> None:
 
     assert {"q", "tag", "sort", "page", "limit"} <= recipe_query_names
     assert {"get"} <= set(openapi["/api/export"])
+    assert {"post"} <= set(openapi["/api/recipes/{recipe_id}/cook"])
 
 
 def test_export_requires_authentication() -> None:
