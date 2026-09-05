@@ -125,6 +125,25 @@ a {
   font-weight: 700;
 }
 
+.site-header__user {
+  max-width: 11rem;
+  overflow: hidden;
+  color: var(--muted);
+  font-family: Arial, sans-serif;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-header__logout {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  font-size: 0.78rem;
+}
+
 .button {
   display: inline-flex;
   align-items: center;
