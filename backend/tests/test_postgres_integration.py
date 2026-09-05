@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -16,13 +16,19 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from app.core.db import get_db
 from app.main import app
-from app.models import User
+from app.models import Recipe, RecipeTag, Tag, User
 
 TEST_DATABASE_URL = os.environ.get("SKILLET_TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(
     TEST_DATABASE_URL is None,
     reason="SKILLET_TEST_DATABASE_URL is required for PostgreSQL integration tests",
 )
+
+
+async def discard_test_tags(session: AsyncSession, names: list[str]) -> None:
+    """Delete the given tags only when no recipe still references them."""
+    referenced = select(RecipeTag.tag_id).select_from(RecipeTag).subquery()
+    await session.execute(delete(Tag).where(Tag.name.in_(names), ~Tag.id.in_(referenced)))
 
 
 @pytest.fixture
@@ -95,10 +101,82 @@ def test_recipe_api_round_trip_uses_postgres(
             assert TEST_DATABASE_URL is not None
             engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool)
             async with async_sessionmaker(engine, class_=AsyncSession)() as session:
+                await session.execute(delete(Recipe).where(Recipe.id == recipe["id"]))
                 await session.execute(delete(User).where(User.email == email))
+                await discard_test_tags(session, ["integration", "search"])
                 await session.commit()
             await engine.dispose()
 
         asyncio.run(remove_test_user())
     finally:
+        app.dependency_overrides.clear()
+
+
+def test_recipe_steps_and_tags_replace_cleanly_on_update(
+    database_sessionmaker: async_sessionmaker[AsyncSession],
+) -> None:
+    """Replacing steps and tags on an existing recipe must not violate the (recipe_id, order) key."""
+    email = f"steps-{uuid4()}@example.com"
+    password = "steps-password"
+    recipe_id: int | None = None
+    try:
+        with TestClient(app) as client:
+            client.post(
+                "/api/auth/register",
+                json={"email": email, "password": password, "default_recipe_locked": False},
+            )
+            assert client.post(
+                "/api/auth/cookie/login",
+                data={"username": email, "password": password},
+            ).status_code == 204
+
+            created = client.post(
+                "/api/recipes",
+                json={
+                    "title": "Step Soup",
+                    "ingredients": [{"name": "broth", "quantity": 1, "unit": "l"}],
+                    "steps": [
+                        {"instruction": "Simmer the broth"},
+                        {"instruction": "Season to taste"},
+                    ],
+                    "tags": ["one", "two"],
+                },
+            )
+            assert created.status_code == 201
+            recipe_id = created.json()["id"]
+
+            updated = client.patch(
+                f"/api/recipes/{recipe_id}",
+                json={
+                    "steps": [
+                        {"instruction": "Start with a cold pot"},
+                        {"instruction": "Add the broth and simmer"},
+                        {"instruction": "Season and serve"},
+                    ],
+                    "tags": ["one", "three"],
+                },
+            )
+            assert updated.status_code == 200, updated.text
+            recipe = updated.json()
+            assert [step["order"] for step in recipe["steps"]] == [1, 2, 3]
+            assert [step["instruction"] for step in recipe["steps"]] == [
+                "Start with a cold pot",
+                "Add the broth and simmer",
+                "Season and serve",
+            ]
+            assert [tag["name"] for tag in recipe["tags"]] == ["one", "three"]
+    finally:
+
+        async def remove_test_recipe() -> None:
+            assert TEST_DATABASE_URL is not None
+            engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool)
+            async with async_sessionmaker(engine, class_=AsyncSession)() as session:
+                if recipe_id is not None:
+                    await session.execute(delete(Recipe).where(Recipe.id == recipe_id))
+                await session.execute(delete(User).where(User.email == email))
+                await discard_test_tags(session, ["one", "two", "three"])
+                await session.commit()
+            await engine.dispose()
+
+        asyncio.run(remove_test_recipe())
         app.dependency_overrides.clear()

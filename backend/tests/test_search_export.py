@@ -78,6 +78,9 @@ class FakeSearchSession:
         """Record a successful transaction."""
         self.commits += 1
 
+    async def flush(self) -> None:
+        """Accept explicit flush requests from the route."""
+
     async def delete(self, _: Any) -> None:
         """Accept tag deletion requests."""
 
