@@ -90,8 +90,13 @@ def _replace_ingredients(recipe: Recipe, ingredients: Sequence[IngredientInput])
     ]
 
 
-def _replace_steps(recipe: Recipe, steps: Sequence[StepInput]) -> None:
-    """Replace instructions, deriving persisted order from their list position."""
+async def _replace_steps(
+    recipe: Recipe, steps: Sequence[StepInput], session: AsyncSession
+) -> None:
+    """Replace instructions with freshly assigned order."""
+    for step in list(recipe.steps):
+        await session.delete(step)
+    await session.flush()
     recipe.steps = [
         Step(order=index, instruction=item.instruction) for index, item in enumerate(steps, start=1)
     ]
@@ -221,7 +226,7 @@ async def create_recipe(
         is_locked=user.default_recipe_locked,
     )
     _replace_ingredients(recipe, payload.ingredients)
-    _replace_steps(recipe, payload.steps)
+    await _replace_steps(recipe, payload.steps, session)
     await _replace_tags(recipe, payload.tags, session)
     session.add(recipe)
     await session.commit()
@@ -249,7 +254,7 @@ async def update_recipe(
     if "ingredients" in payload.model_fields_set:
         _replace_ingredients(recipe, payload.ingredients or [])
     if "steps" in payload.model_fields_set:
-        _replace_steps(recipe, payload.steps or [])
+        await _replace_steps(recipe, payload.steps or [], session)
     if "tags" in payload.model_fields_set:
         await _replace_tags(recipe, payload.tags or [], session)
     await session.commit()

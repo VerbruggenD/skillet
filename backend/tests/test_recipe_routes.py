@@ -76,6 +76,9 @@ class FakeRecipeSession:
         """Record a successful transaction."""
         self.commits += 1
 
+    async def flush(self) -> None:
+        """Accept explicit flush requests from the route."""
+
     async def delete(self, recipe: Recipe) -> None:
         """Accept deletion requests from the route."""
         self.recipe = None
