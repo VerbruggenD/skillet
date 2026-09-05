@@ -69,6 +69,10 @@ class Recipe(Base):
         server_default=func.now(),
         nullable=False,
     )
+    last_cooked: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     search_vector: Mapped[object | None] = mapped_column(TSVECTOR, nullable=True)
 
     owner: Mapped[User | None] = relationship()

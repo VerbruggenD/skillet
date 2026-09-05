@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Sequence
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated
 from uuid import uuid4
@@ -55,6 +56,7 @@ def _recipe_read(recipe: Recipe) -> RecipeRead:
             "source_url": recipe.source_url,
             "is_locked": recipe.is_locked,
             "created_at": recipe.created_at,
+            "last_cooked": recipe.last_cooked,
             "ingredients": list(recipe.ingredients),
             "steps": sorted(recipe.steps, key=lambda step: step.order),
             "images": list(recipe.images),
@@ -133,6 +135,7 @@ async def list_recipes(
         "name": Recipe.title.asc(),
         "date": Recipe.created_at.desc(),
         "prep_time": Recipe.prep_time.asc().nullslast(),
+        "last_cooked": Recipe.last_cooked.desc().nullslast(),
     }
     if sort not in sort_columns:
         raise HTTPException(status_code=400, detail="Unsupported recipe sort")
@@ -163,6 +166,20 @@ async def get_recipe(
     recipe = await _get_recipe_or_404(session, recipe_id)
     if recipe.is_locked and user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
+    return _recipe_read(recipe)
+
+
+@router.post("/{recipe_id}/cook", response_model=RecipeRead)
+async def record_cook(
+    recipe_id: int,
+    session: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(current_user)],
+) -> RecipeRead:
+    """Record that an authenticated user cooked a visible recipe."""
+    recipe = await _get_recipe_or_404(session, recipe_id)
+    recipe.last_cooked = datetime.now(timezone.utc)
+    await session.commit()
+    await session.refresh(recipe, attribute_names=["ingredients", "steps", "images"])
     return _recipe_read(recipe)
 
 
