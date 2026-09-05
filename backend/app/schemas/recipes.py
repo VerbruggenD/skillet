@@ -14,6 +14,15 @@ class IngredientInput(BaseModel):
     notes: str | None = None
 
 
+class TagRead(BaseModel):
+    """Recipe tag metadata returned by the API."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+
+
 class StepInput(BaseModel):
     """A single ordered preparation instruction supplied in a recipe write."""
 
@@ -31,6 +40,7 @@ class RecipeCreate(BaseModel):
     source_url: HttpUrl | None = None
     ingredients: list[IngredientInput] = Field(default_factory=list)
     steps: list[StepInput] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list, max_length=50)
 
 
 class RecipeUpdate(BaseModel):
@@ -45,6 +55,7 @@ class RecipeUpdate(BaseModel):
     is_locked: bool | None = None
     ingredients: list[IngredientInput] | None = None
     steps: list[StepInput] | None = None
+    tags: list[str] | None = Field(default=None, max_length=50)
 
 
 class IngredientRead(IngredientInput):
@@ -92,6 +103,7 @@ class RecipeRead(BaseModel):
     ingredients: list[IngredientRead]
     steps: list[StepRead]
     images: list[ImageRead]
+    tags: list[TagRead]
 
 
 class RecipeList(BaseModel):

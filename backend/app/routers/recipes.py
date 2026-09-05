@@ -10,11 +10,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.sql.elements import ColumnElement
 
 from ..core.config import settings
 from ..core.db import get_db
 from ..core.users import current_user, current_user_optional
-from ..models import Image, Ingredient, Recipe, Step, User
+from ..models import Image, Ingredient, Recipe, Step, Tag, User
 from ..schemas.recipes import (
     ImageRead,
     IngredientInput,
@@ -36,6 +37,7 @@ def _recipe_options():
         selectinload(Recipe.ingredients),
         selectinload(Recipe.steps),
         selectinload(Recipe.images),
+        selectinload(Recipe.tags),
     )
 
 
@@ -56,6 +58,7 @@ def _recipe_read(recipe: Recipe) -> RecipeRead:
             "ingredients": list(recipe.ingredients),
             "steps": sorted(recipe.steps, key=lambda step: step.order),
             "images": list(recipe.images),
+            "tags": list(recipe.tags),
         }
     )
 
@@ -92,21 +95,55 @@ def _replace_steps(recipe: Recipe, steps: Sequence[StepInput]) -> None:
     ]
 
 
+async def _replace_tags(recipe: Recipe, names: Sequence[str], session: AsyncSession) -> None:
+    """Get or create normalized tags and replace the recipe's tag collection."""
+    normalized = list(dict.fromkeys(name.strip().lower() for name in names if name.strip()))
+    if not normalized:
+        recipe.tags = []
+        return
+    existing = list((await session.scalars(select(Tag).where(Tag.name.in_(normalized)))).all())
+    by_name = {tag.name: tag for tag in existing}
+    for name in normalized:
+        if name not in by_name:
+            tag = Tag(name=name)
+            session.add(tag)
+            by_name[name] = tag
+    recipe.tags = [by_name[name] for name in normalized]
+
+
 @router.get("", response_model=RecipeList)
 async def list_recipes(
     session: Annotated[AsyncSession, Depends(get_db)],
     user: Annotated[User | None, Depends(current_user_optional)],
+    q: Annotated[str | None, Query(min_length=1)] = None,
+    tag: Annotated[list[str] | None, Query()] = None,
+    sort: Annotated[str, Query()] = "date",
     page: Annotated[int, Query(ge=1)] = 1,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> RecipeList:
     """List recipes, hiding locked recipes only from anonymous visitors."""
-    filters = [] if user is not None else [Recipe.is_locked.is_(False)]
-    total = await session.scalar(select(func.count()).select_from(Recipe).where(*filters))
+    filters: list[ColumnElement[bool]] = [] if user is not None else [Recipe.is_locked.is_(False)]
+    if q:
+        filters.append(Recipe.search_vector.op("@@")(func.websearch_to_tsquery("english", q)))
+    if tag:
+        filters.extend(
+            Recipe.tags.any(Tag.name == name.strip().lower()) for name in tag if name.strip()
+        )
+    sort_columns = {
+        "name": Recipe.title.asc(),
+        "date": Recipe.created_at.desc(),
+        "prep_time": Recipe.prep_time.asc().nullslast(),
+    }
+    if sort not in sort_columns:
+        raise HTTPException(status_code=400, detail="Unsupported recipe sort")
+    total = await session.scalar(
+        select(func.count(func.distinct(Recipe.id))).select_from(Recipe).where(*filters)
+    )
     statement = (
         select(Recipe)
         .where(*filters)
         .options(*_recipe_options())
-        .order_by(Recipe.created_at.desc(), Recipe.id.desc())
+        .order_by(sort_columns[sort], Recipe.id.desc())
         .offset((page - 1) * limit)
         .limit(limit)
     )
@@ -148,6 +185,7 @@ async def create_recipe(
     )
     _replace_ingredients(recipe, payload.ingredients)
     _replace_steps(recipe, payload.steps)
+    await _replace_tags(recipe, payload.tags, session)
     session.add(recipe)
     await session.commit()
     await session.refresh(recipe, attribute_names=["ingredients", "steps", "images"])
@@ -164,7 +202,9 @@ async def update_recipe(
     """Update a recipe partially when the caller owns it or administers the instance."""
     recipe = await _get_recipe_or_404(session, recipe_id)
     _require_recipe_editor(recipe, user)
-    values = payload.model_dump(exclude_unset=True, exclude={"ingredients", "steps", "source_url"})
+    values = payload.model_dump(
+        exclude_unset=True, exclude={"ingredients", "steps", "source_url", "tags"}
+    )
     for field, value in values.items():
         setattr(recipe, field, value)
     if "source_url" in payload.model_fields_set:
@@ -173,6 +213,8 @@ async def update_recipe(
         _replace_ingredients(recipe, payload.ingredients or [])
     if "steps" in payload.model_fields_set:
         _replace_steps(recipe, payload.steps or [])
+    if "tags" in payload.model_fields_set:
+        await _replace_tags(recipe, payload.tags or [], session)
     await session.commit()
     await session.refresh(recipe, attribute_names=["ingredients", "steps", "images"])
     return _recipe_read(recipe)

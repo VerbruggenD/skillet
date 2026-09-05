@@ -129,9 +129,26 @@ def test_recipe_image_upload_requires_authentication() -> None:
     assert response.status_code == 401
 
 
-def test_tag_listing_returns_placeholder_not_implemented() -> None:
-    """The tag endpoint should remain explicit while the feature is pending."""
-    response = client.get("/api/tags/")
+def test_tag_routes_match_the_api_contract() -> None:
+    """Tag listing is public and tag deletion is administrator-only."""
+    openapi = app.openapi()["paths"]
 
-    assert response.status_code == 501
-    assert response.json() == {"detail": "Not implemented: list tags"}
+    assert {"get"} <= set(openapi["/api/tags"])
+    assert {"delete"} <= set(openapi["/api/tags/{tag_id}"])
+
+
+def test_search_and_export_routes_match_the_api_contract() -> None:
+    """Recipe search filters and authenticated export are exposed."""
+    openapi = app.openapi()["paths"]
+    recipe_query_names = {
+        parameter["name"] for parameter in openapi["/api/recipes"]["get"]["parameters"]
+    }
+
+    assert {"q", "tag", "sort", "page", "limit"} <= recipe_query_names
+    assert {"get"} <= set(openapi["/api/export"])
+
+
+def test_export_requires_authentication() -> None:
+    """Recipe export is not available to anonymous callers."""
+    response = client.get("/api/export")
+    assert response.status_code == 401
