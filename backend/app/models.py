@@ -72,6 +72,7 @@ class Recipe(Base):
     search_vector: Mapped[object | None] = mapped_column(TSVECTOR, nullable=True)
 
     owner: Mapped[User | None] = relationship()
+    tags: Mapped[list["Tag"]] = relationship(secondary="recipe_tags", lazy="selectin")
     ingredients: Mapped[list["Ingredient"]] = relationship(
         back_populates="recipe", cascade="all, delete-orphan"
     )

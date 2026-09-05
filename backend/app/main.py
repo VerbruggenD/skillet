@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from .core.users import auth_backend, fastapi_users
-from .routers import auth, favorites, images, recipes, settings, suggestions, tags, users
+from .routers import auth, export, favorites, images, recipes, settings, suggestions, tags, users
 
 app = FastAPI(
     title="Skillet API",
@@ -33,3 +33,4 @@ app.include_router(images.router)
 app.include_router(settings.router)
 app.include_router(favorites.router)
 app.include_router(suggestions.router)
+app.include_router(export.router)
