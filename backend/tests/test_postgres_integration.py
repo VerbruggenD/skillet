@@ -108,7 +108,7 @@ def test_recipe_api_round_trip_uses_postgres(
 def test_recipe_steps_and_tags_replace_cleanly_on_update(
     database_sessionmaker: async_sessionmaker[AsyncSession],
 ) -> None:
-    """Replacing steps and tags on an existing recipe must not violate the (recipe_id, order) key."""
+    """Replacing steps and tags must not violate the (recipe_id, order) unique key."""
     email = f"steps-{uuid4()}@example.com"
     password = "steps-password"
     recipe_id: int | None = None
@@ -118,10 +118,13 @@ def test_recipe_steps_and_tags_replace_cleanly_on_update(
                 "/api/auth/register",
                 json={"email": email, "password": password, "default_recipe_locked": False},
             )
-            assert client.post(
-                "/api/auth/cookie/login",
-                data={"username": email, "password": password},
-            ).status_code == 204
+            assert (
+                client.post(
+                    "/api/auth/cookie/login",
+                    data={"username": email, "password": password},
+                ).status_code
+                == 204
+            )
 
             created = client.post(
                 "/api/recipes",

@@ -50,7 +50,7 @@ async def _get_suggestion(
     return suggestion
 
 
-def _apply_payload(recipe: Recipe, payload: RecipeUpdate) -> None:
+async def _apply_payload(recipe: Recipe, payload: RecipeUpdate, session: AsyncSession) -> None:
     """Apply a validated suggestion payload using normal recipe update semantics."""
     values = payload.model_dump(exclude_unset=True, exclude={"ingredients", "steps", "source_url"})
     for field, value in values.items():
@@ -60,7 +60,7 @@ def _apply_payload(recipe: Recipe, payload: RecipeUpdate) -> None:
     if "ingredients" in payload.model_fields_set:
         _replace_ingredients(recipe, payload.ingredients or [])
     if "steps" in payload.model_fields_set:
-        _replace_steps(recipe, payload.steps or [])
+        await _replace_steps(recipe, payload.steps or [], session)
 
 
 @router.post(
@@ -140,7 +140,7 @@ async def accept_suggestion(
     _require_reviewer(recipe, user)
     suggestion = await _get_suggestion(session, recipe_id, suggestion_id)
     _require_pending(suggestion)
-    _apply_payload(recipe, RecipeUpdate.model_validate(suggestion.payload))
+    await _apply_payload(recipe, RecipeUpdate.model_validate(suggestion.payload), session)
     suggestion.status = "accepted"
     suggestion.resolved_at = datetime.now(timezone.utc)
     suggestion.resolved_by = user.id

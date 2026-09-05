@@ -90,9 +90,7 @@ def _replace_ingredients(recipe: Recipe, ingredients: Sequence[IngredientInput])
     ]
 
 
-async def _replace_steps(
-    recipe: Recipe, steps: Sequence[StepInput], session: AsyncSession
-) -> None:
+async def _replace_steps(recipe: Recipe, steps: Sequence[StepInput], session: AsyncSession) -> None:
     """Replace instructions with freshly assigned order."""
     for step in list(recipe.steps):
         await session.delete(step)
