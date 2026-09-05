@@ -23,6 +23,21 @@ jobs:
     name: Backend - lint & test
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: skillet
+          POSTGRES_PASSWORD: change-me
+          POSTGRES_DB: skillet
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    env:
+      SKILLET_TEST_DATABASE_URL: postgresql+asyncpg://skillet:change-me@localhost:5432/skillet
+
     defaults:
       run:
         working-directory: backend
@@ -44,6 +59,12 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --locked
+
+      - name: Run database migrations
+        run: |
+          cd ..
+          DATABASE_URL=postgresql+psycopg://skillet:change-me@localhost:5432/skillet \
+            uv run --project backend alembic -c backend/migrations/alembic.ini upgrade head
 
       - name: Lint
         run: uv run ruff check .
