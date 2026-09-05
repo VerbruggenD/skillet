@@ -1,8 +1,14 @@
 """Application entry point exposing the public FastAPI API routers."""
 
+from typing import cast
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from starlette.types import ExceptionHandler
 
+from .core.rate_limit import limit_login_router, limiter
 from .core.users import auth_backend, fastapi_users
 from .routers import auth, export, favorites, images, recipes, settings, suggestions, tags, users
 
@@ -11,6 +17,8 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
     docs_url="/api/docs",
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, cast(ExceptionHandler, _rate_limit_exceeded_handler))
 
 
 @app.get("/healthz")
@@ -22,7 +30,7 @@ async def healthz() -> JSONResponse:
 # include routers
 app.include_router(auth.router)
 app.include_router(
-    fastapi_users.get_auth_router(auth_backend),
+    limit_login_router(fastapi_users.get_auth_router(auth_backend)),
     prefix="/api/auth/cookie",
     tags=["auth"],
 )
