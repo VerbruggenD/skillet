@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     secret_key: str = "change-me"
     cookie_name: str = "skillet-session"
     cookie_secure: bool = False
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     login_rate_limit: str = "5/minute"
     upload_dir: str = "./uploads"
     max_upload_size: int = 5 * 1024 * 1024
