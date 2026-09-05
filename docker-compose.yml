@@ -11,32 +11,34 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     volumes:
       - ./data/uploads:/app/uploads
     depends_on:
       - postgres
 
-  web:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: skillet-web
-    ports:
-      - "${WEB_PORT:-3000}:3000"
-    env_file:
-      - .env
-    environment:
-      - NEXT_PUBLIC_API_URL=http://api:8000
-    depends_on:
-      - api
+  # Run the frontend separately with `cd frontend && npm run dev` for live updates.
+  # Set NEXT_PUBLIC_API_URL=http://localhost:${APP_PORT:-8000} in the frontend dev environment.
+  # web:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: skillet-web
+  #   ports:
+  #     - "${WEB_PORT:-3000}:3000"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - NEXT_PUBLIC_API_URL=http://api:8000
+  #   depends_on:
+  #     - api
 
   postgres:
     image: postgres:16
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-skillet}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skillet}
       POSTGRES_DB: ${POSTGRES_DB:-skillet}
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
