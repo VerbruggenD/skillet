@@ -1,15 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #1d2b29;
-  --muted: #667370;
-  --paper: #f6f4ee;
-  --surface: #fffdf8;
-  --line: #d9ded8;
-  --sage: #dce8dc;
-  --pine: #284f46;
-  --coral: #d96f52;
-  --yellow: #f2ce72;
+  --ink: #2b2018;
+  --muted: #8a7767;
+  --paper: #faf3e6;
+  --surface: #fffaf0;
+  --line: #e4d6bf;
+  --ember: #b4541f;
+  --char: #4b2f1c;
+  --flame: #e6672a;
+  --honey: #f2c94c;
+  --amber-soft: #f7e3c8;
 }
 
 @theme inline {
@@ -46,8 +47,8 @@ a {
 .app-shell {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 8% 18%, rgba(220, 232, 220, 0.7) 0 14rem, transparent 14.1rem),
-    linear-gradient(135deg, transparent 0 44%, rgba(255, 253, 248, 0.55) 44% 62%, transparent 62%),
+    radial-gradient(circle at 8% 18%, rgba(242, 201, 76, 0.16) 0 14rem, transparent 14.1rem),
+    linear-gradient(135deg, transparent 0 44%, rgba(255, 250, 240, 0.55) 44% 62%, transparent 62%),
     var(--paper);
 }
 
@@ -58,7 +59,7 @@ a {
   max-width: 1280px;
   margin: 0 auto;
   padding: 1.35rem 2.5rem;
-  border-bottom: 1px solid rgba(40, 79, 70, 0.14);
+  border-bottom: 1px solid rgba(75, 47, 28, 0.14);
 }
 
 .brand-mark {
@@ -69,15 +70,16 @@ a {
 }
 
 .brand-mark__icon {
-  display: grid;
-  width: 2.45rem;
-  height: 2.45rem;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--coral);
-  color: var(--surface);
-  font-size: 1.35rem;
-  font-style: italic;
+  display: block;
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.brand-mark__icon .skillet-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .brand-mark__name,
@@ -86,7 +88,7 @@ a {
 }
 
 .brand-mark__name {
-  color: var(--pine);
+  color: var(--char);
   font-size: 1.35rem;
   font-weight: 700;
 }
@@ -117,7 +119,7 @@ a {
 
 .site-nav__link:hover,
 .text-link:hover {
-  color: var(--coral);
+  color: var(--flame);
 }
 
 .site-nav__link--active {
@@ -151,9 +153,9 @@ a {
   gap: 0.75rem;
   min-height: 3rem;
   padding: 0.8rem 1.25rem;
-  border: 1px solid var(--pine);
+  border: 1px solid var(--char);
   border-radius: 999px;
-  background: var(--pine);
+  background: var(--char);
   color: var(--surface);
   font-family: Arial, sans-serif;
   font-size: 0.78rem;
@@ -162,8 +164,8 @@ a {
 }
 
 .button:hover {
-  background: var(--coral);
-  border-color: var(--coral);
+  background: var(--flame);
+  border-color: var(--flame);
   transform: translateY(-2px);
 }
 
@@ -194,7 +196,7 @@ a {
 
 .eyebrow {
   margin: 0 0 1rem;
-  color: var(--coral);
+  color: var(--flame);
   font-family: Arial, sans-serif;
   font-size: 0.68rem;
   font-weight: 700;
@@ -212,7 +214,7 @@ p {
 h1 {
   max-width: 32rem;
   margin-bottom: 1.3rem;
-  color: var(--pine);
+  color: var(--char);
   font-size: clamp(3.2rem, 7vw, 6.7rem);
   font-weight: 400;
   letter-spacing: -0.04em;
@@ -247,10 +249,10 @@ h1 {
   height: 12rem;
   margin-right: 4rem;
   place-content: center;
-  border: 1px solid var(--pine);
+  border: 1px solid var(--char);
   border-radius: 50%;
-  background: var(--yellow);
-  color: var(--pine);
+  background: var(--honey);
+  color: var(--char);
   transform: rotate(8deg);
 }
 
@@ -284,7 +286,7 @@ h1 {
 
 h2 {
   margin-bottom: 0;
-  color: var(--pine);
+  color: var(--char);
   font-size: 2.45rem;
   font-weight: 400;
   letter-spacing: -0.03em;
@@ -310,7 +312,7 @@ h2 {
   gap: 2rem;
   max-width: 44rem;
   padding: 2rem;
-  border: 1px dashed #a9bcb1;
+  border: 1px dashed #c9b185;
   background: rgba(255, 253, 248, 0.62);
 }
 
@@ -321,14 +323,14 @@ h2 {
   height: 4.5rem;
   place-items: center;
   border-radius: 1.2rem;
-  background: var(--sage);
-  color: var(--pine);
+  background: var(--amber-soft);
+  color: var(--char);
   font-size: 2.1rem;
 }
 
 .empty-state h3 {
   margin-bottom: 0.45rem;
-  color: var(--pine);
+  color: var(--char);
   font-size: 1.35rem;
   font-weight: 400;
 }
@@ -342,7 +344,7 @@ h2 {
 }
 
 .text-link--accent {
-  color: var(--coral);
+  color: var(--flame);
   font-family: Arial, sans-serif;
   font-size: 0.76rem;
   font-weight: 700;
@@ -381,7 +383,7 @@ h2 {
   margin-top: 3rem;
   padding-top: 0.8rem;
   border-top: 1px solid var(--line);
-  color: var(--pine);
+  color: var(--char);
   font-family: Arial, sans-serif;
   font-size: 0.68rem;
   letter-spacing: 0.06em;
@@ -389,14 +391,14 @@ h2 {
 }
 
 .auth-page__aside--register .auth-page__aside-note {
-  color: var(--coral);
+  color: var(--flame);
 }
 
 .auth-card {
   padding: clamp(2rem, 5vw, 3.5rem);
   border: 1px solid var(--line);
   background: rgba(255, 253, 248, 0.84);
-  box-shadow: 1.2rem 1.2rem 0 rgba(220, 232, 220, 0.7);
+  box-shadow: 1.2rem 1.2rem 0 rgba(247, 227, 200, 0.7);
 }
 
 .auth-card__heading {
@@ -453,7 +455,7 @@ h2 {
   width: 100%;
   min-height: 3.15rem;
   padding: 0.85rem 0.95rem;
-  border: 1px solid #bdc9c1;
+  border: 1px solid #d6c3a3;
   border-radius: 0.2rem;
   outline: none;
   background: var(--surface);
@@ -464,8 +466,8 @@ h2 {
 }
 
 .auth-form__field input:not([type="checkbox"]):focus {
-  border-color: var(--pine);
-  box-shadow: 0 0 0 3px rgba(40, 79, 70, 0.12);
+  border-color: var(--char);
+  box-shadow: 0 0 0 3px rgba(75, 47, 28, 0.12);
 }
 
 .auth-form__check {
@@ -479,15 +481,15 @@ h2 {
 .auth-form__check input {
   width: 1rem;
   height: 1rem;
-  accent-color: var(--pine);
+  accent-color: var(--char);
 }
 
 .auth-form__error {
   margin-bottom: 0;
   padding: 0.8rem 0.9rem;
-  border-left: 3px solid var(--coral);
-  background: rgba(217, 111, 82, 0.1);
-  color: #8d3e2d;
+  border-left: 3px solid var(--flame);
+  background: rgba(230, 103, 42, 0.12);
+  color: #8a3d1d;
   font-family: Arial, sans-serif;
   font-size: 0.75rem;
   line-height: 1.45;
@@ -512,7 +514,7 @@ h2 {
 }
 
 .auth-card__footer a {
-  color: var(--coral);
+  color: var(--flame);
   font-weight: 700;
 }
 
@@ -527,8 +529,8 @@ h2 {
   margin: 0 auto 1.3rem;
   place-items: center;
   border-radius: 50%;
-  background: var(--sage);
-  color: var(--pine);
+  background: var(--amber-soft);
+  color: var(--char);
   font-family: Arial, sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
@@ -558,7 +560,7 @@ h2 {
     width: 100%;
     justify-content: space-between;
     padding-top: 0.65rem;
-    border-top: 1px solid rgba(40, 79, 70, 0.14);
+    border-top: 1px solid rgba(75, 47, 28, 0.14);
   }
 
   .site-header__actions .text-link {
@@ -621,6 +623,6 @@ h2 {
   }
 
   .auth-card {
-    box-shadow: 0.7rem 0.7rem 0 rgba(220, 232, 220, 0.7);
+    box-shadow: 0.7rem 0.7rem 0 rgba(247, 227, 200, 0.7);
   }
 }
