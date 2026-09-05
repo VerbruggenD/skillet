@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete, select
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -16,19 +16,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from app.core.db import get_db
 from app.main import app
-from app.models import Recipe, RecipeTag, Tag, User
+from app.models import Recipe, User
 
 TEST_DATABASE_URL = os.environ.get("SKILLET_TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(
     TEST_DATABASE_URL is None,
     reason="SKILLET_TEST_DATABASE_URL is required for PostgreSQL integration tests",
 )
-
-
-async def discard_test_tags(session: AsyncSession, names: list[str]) -> None:
-    """Delete the given tags only when no recipe still references them."""
-    referenced = select(RecipeTag.tag_id).select_from(RecipeTag).subquery()
-    await session.execute(delete(Tag).where(Tag.name.in_(names), ~Tag.id.in_(referenced)))
 
 
 @pytest.fixture
@@ -103,7 +97,6 @@ def test_recipe_api_round_trip_uses_postgres(
             async with async_sessionmaker(engine, class_=AsyncSession)() as session:
                 await session.execute(delete(Recipe).where(Recipe.id == recipe["id"]))
                 await session.execute(delete(User).where(User.email == email))
-                await discard_test_tags(session, ["integration", "search"])
                 await session.commit()
             await engine.dispose()
 
@@ -165,6 +158,12 @@ def test_recipe_steps_and_tags_replace_cleanly_on_update(
                 "Season and serve",
             ]
             assert [tag["name"] for tag in recipe["tags"]] == ["one", "three"]
+
+            tags = client.get("/api/tags")
+            assert tags.status_code == 200
+            tag_names = [tag["name"] for tag in tags.json()]
+            assert "two" not in tag_names  # unreferenced tags are removed automatically
+            assert "one" in tag_names and "three" in tag_names
     finally:
 
         async def remove_test_recipe() -> None:
@@ -174,7 +173,6 @@ def test_recipe_steps_and_tags_replace_cleanly_on_update(
                 if recipe_id is not None:
                     await session.execute(delete(Recipe).where(Recipe.id == recipe_id))
                 await session.execute(delete(User).where(User.email == email))
-                await discard_test_tags(session, ["one", "two", "three"])
                 await session.commit()
             await engine.dispose()
 
