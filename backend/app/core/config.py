@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     secret_key: str = "change-me"
     cookie_name: str = "skillet-session"
     cookie_secure: bool = False
+    upload_dir: str = "./uploads"
+    max_upload_size: int = 5 * 1024 * 1024
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

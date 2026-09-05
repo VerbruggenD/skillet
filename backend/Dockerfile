@@ -15,7 +15,14 @@ COPY pyproject.toml uv.lock ./
 
 # Upgrade pip and install runtime dependencies
 RUN python -m pip install --upgrade pip setuptools wheel \
-	&& pip install --no-cache-dir fastapi uvicorn[standard] sqlalchemy alembic pydantic-settings
+	&& pip install --no-cache-dir \
+		fastapi \
+		uvicorn[standard] \
+		sqlalchemy \
+		alembic \
+		pydantic-settings \
+		fastapi-users[sqlalchemy] \
+		asyncpg
 
 # Copy application code
 COPY app ./app
