@@ -5,7 +5,7 @@ from datetime import datetime
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyBaseAccessTokenTable
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
-from sqlalchemy.dialects.postgresql import TSVECTOR
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -181,7 +181,7 @@ class RecipeSuggestion(Base):
     suggested_by: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    payload: Mapped[str] = mapped_column(Text, nullable=False)
+    payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="pending", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
