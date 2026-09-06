@@ -133,9 +133,9 @@ export default function RecipeDetailPage() {
       </header>
 
       <div className="recipe-detail__actions">
-        <button className="button" type="button" disabled title="Cook mode is on its way">
+        <Link className="button" href={`/recipes/${recipe.id}/cook`}>
           Start cooking <span aria-hidden="true">↗</span>
-        </button>
+        </Link>
         <button
           className="button button--ghost"
           type="button"
